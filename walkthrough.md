@@ -6,8 +6,8 @@ I have successfully transformed the project into the "Edo-AI Bonsai" experience!
 
 ### 1. Edo-Tech Haiku Generator (Backend)
 - **File**: `functions/api/[[route]].ts`
-- **Feature**: Added a `/haiku` endpoint that returns humorous phrases mixing Edo period terminology with modern tech jargon.
-- **Example**: "The server is down, like a cherry blossom falling. 404."
+- **Feature**: Added a `/haiku` endpoint that returns humorous phrases mixing Edo period terminology with modern tech jargon, now in Japanese.
+- **Example**: "サーバー落ちて　散る桜かな　404"
 
 ### 2. Sumi-e & Digital Visuals (Frontend)
 - **File**: `public/bonsai.js`
