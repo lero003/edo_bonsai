@@ -1,39 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edo-AI Bonsai</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    <div class="container">
+    <div class="canvas-wrapper">
+        <canvas id="bonsaiCanvas"></canvas>
+    </div>
+
+    <div class="ui-layer">
         <header>
-            <h1 class="glitch" data-text="EDO-AI BONSAI">EDO-AI BONSAI</h1>
-            <p class="subtitle">Cyber-Organic Gardening</p>
+            <h1>EDO BONSAI</h1>
+            <p class="subtitle">Digital Nature, Growing in the Cloud.</p>
         </header>
 
-        <main>
-            <div class="canvas-wrapper">
-                <canvas id="bonsaiCanvas"></canvas>
-                <div class="scanline"></div>
+        <div class="controls">
+            <div class="input-group">
+                <input type="text" id="userInput" placeholder="Write a wish..." autocomplete="off">
+                <button id="growBtn">Sow</button>
             </div>
-
-            <div class="controls">
-                <div class="input-group">
-                    <input type="text" id="userInput" placeholder="Whisper to the tree..." autocomplete="off">
-                    <button id="growBtn">GROW</button>
-                </div>
-                <div id="aiResponse" class="response-box"></div>
+            <div id="aiResponse" class="response-box"></div>
+            <div class="simulation-toggle">
+                <input type="checkbox" id="simToggle">
+                <label for="simToggle">Auto-Watering (Simulation Mode)</label>
             </div>
-        </main>
-
-        <footer>
-            <p>System Status: <span class="status-ok">ONLINE</span> | Era: <span class="era">REIWA-CYBER</span></p>
-        </footer>
+        </div>
     </div>
+
     <script src="bonsai.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>

@@ -23,20 +23,32 @@ Then open [http://localhost:8787](http://localhost:8787) in your browser.
 
 ## 3. Features Implemented
 
-- **Cyber-Edo Aesthetic**: A mix of dark mode, neon green, and traditional serif fonts.
+- **Open Sumi-e Aesthetic**: A light, airy design inspired by traditional ink wash painting.
 - **Interactive Bonsai**: A canvas-based tree that grows procedurally.
-- **"Edo-fication" API**: A Hono backend that "translates" your text into Haiku-style responses (mocked for now).
-- **Glitch Effects**: Visual glitches on the title and tree leaves.
+- **Simulation Mode**: Toggle "Auto-Watering" to watch the tree grow automatically with random comments.
+- **"Edo-fication" API**: A Hono backend that "translates" your text into Haiku-style responses.
 
 ## 4. Deployment to Cloudflare Pages
 
-To deploy this to the internet:
+### Option A: Direct Upload (CLI)
+To deploy immediately from your terminal:
 
 ```bash
 npm run deploy
 ```
 
-This will use Wrangler to deploy your `public` folder and `functions` to Cloudflare Pages.
+### Option B: Git Integration (Dashboard)
+If you push this code to GitHub/GitLab and connect it to Cloudflare Pages, use these settings:
+
+- **Framework Preset**: `None`
+- **Build Command**: `npm install`
+- **Build Output Directory**: `public`
+- **Environment Variables**: None needed yet.
+
+> [!IMPORTANT]
+> The error `Could not resolve "hono"` happens if dependencies aren't installed. Setting the Build Command to `npm install` ensures Cloudflare downloads the necessary libraries before building the functions.
+
+The `functions` directory will be automatically detected by Cloudflare Pages to run the Hono backend.
 
 ## 5. Next Steps
 
