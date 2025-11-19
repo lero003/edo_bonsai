@@ -49,3 +49,10 @@ I have successfully transformed the project into the "Edo-AI Bonsai" experience!
 ## Next Steps
 - You can add more phrases to the `edoTechPhrases` array in `functions/api/[[route]].ts`.
 - You can tweak the `config` object in `public/bonsai.js` to change colors or growth patterns.
+
+### 4. UI Refinement (Web & Mobile)
+- **Files**: `public/style.css`
+- **Feature**:
+    - **Wabi-Sabi Aesthetics**: Added paper texture, vignette, and refined typography.
+    - **Responsive Design**: Optimized layout for mobile devices (centered header, adjusted haiku positioning).
+    - **Modern Controls**: Glassmorphism effect on the "New Tree" button.
