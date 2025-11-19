@@ -1,0 +1,199 @@
+:root {
+    --bg-color: #0a0a0a;
+    --text-color: #e0e0e0;
+    --accent-color: #00ff41; /* Matrix Green */
+    --secondary-accent: #ff0055; /* Cyber Pink */
+    --ink-color: #1a1a1a;
+    --parchment: #f0e6d2;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Noto Serif JP', serif;
+    overflow: hidden; /* Prevent scroll for app-like feel */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--accent-color);
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+    background: radial-gradient(circle at center, #111 0%, #000 100%);
+    position: relative;
+}
+
+header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--accent-color);
+}
+
+h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    color: var(--accent-color);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    position: relative;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: var(--secondary-accent);
+    margin-top: 5px;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.canvas-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--parchment); /* Contrast for the ink tree */
+    opacity: 0.9;
+    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: contrast(1.2) sepia(0.2);
+}
+
+.scanline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.controls {
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    border-top: 1px solid var(--accent-color);
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+input[type="text"] {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    padding: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    box-shadow: 0 0 10px var(--accent-color);
+}
+
+button {
+    background: var(--accent-color);
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: #fff;
+    box-shadow: 0 0 15px #fff;
+}
+
+.response-box {
+    margin-top: 15px;
+    min-height: 40px;
+    color: var(--parchment);
+    font-style: italic;
+    text-align: center;
+}
+
+footer {
+    padding: 10px;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #555;
+    border-top: 1px solid #333;
+}
+
+.status-ok {
+    color: var(--accent-color);
+}
+
+/* Glitch Effect for H1 */
+.glitch::before, .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-color);
+}
+
+.glitch::before {
+    left: 2px;
+    text-shadow: -1px 0 red;
+    clip: rect(24px, 550px, 90px, 0);
+    animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+    left: -2px;
+    text-shadow: -1px 0 blue;
+    clip: rect(85px, 550px, 140px, 0);
+    animation: glitch-anim-2 3s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim-1 {
+    0% { clip: rect(20px, 9999px, 80px, 0); }
+    20% { clip: rect(100px, 9999px, 120px, 0); }
+    40% { clip: rect(40px, 9999px, 60px, 0); }
+    60% { clip: rect(80px, 9999px, 100px, 0); }
+    80% { clip: rect(10px, 9999px, 50px, 0); }
+    100% { clip: rect(60px, 9999px, 90px, 0); }
+}
+
+@keyframes glitch-anim-2 {
+    0% { clip: rect(100px, 9999px, 140px, 0); }
+    20% { clip: rect(20px, 9999px, 60px, 0); }
+    40% { clip: rect(80px, 9999px, 100px, 0); }
+    60% { clip: rect(10px, 9999px, 50px, 0); }
+    80% { clip: rect(120px, 9999px, 160px, 0); }
+    100% { clip: rect(40px, 9999px, 90px, 0); }
+}
