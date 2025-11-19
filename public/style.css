@@ -143,7 +143,16 @@ h1::before {
     border-right: 1px solid rgba(93, 124, 93, 0.3);
     padding-right: 25px;
     transition: opacity 1s ease;
-    text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+    /* Text outline for readability */
+    text-shadow:
+        2px 2px 0 var(--bg-color),
+        -2px -2px 0 var(--bg-color),
+        2px -2px 0 var(--bg-color),
+        -2px 2px 0 var(--bg-color),
+        2px 0px 0 var(--bg-color),
+        -2px 0px 0 var(--bg-color),
+        0px 2px 0 var(--bg-color),
+        0px -2px 0 var(--bg-color);
 }
 
 /* Controls */
@@ -151,11 +160,12 @@ h1::before {
     grid-column: 1 / -1;
     grid-row: 3;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: flex-end;
     pointer-events: auto;
     animation: fadeIn 2s ease-out 1s backwards;
-    padding-bottom: 30px;
+    padding-bottom: 40px;
+    padding-right: 40px;
 }
 
 /* Button */
