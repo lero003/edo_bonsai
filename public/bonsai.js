@@ -32,12 +32,13 @@ function drawDigitalLeaf(x, y) {
     const isBinary = Math.random() > 0.5;
 
     if (isBinary) {
-        ctx.font = '10px monospace';
+        // Increased font size for more visibility
+        ctx.font = `${randomRange(10, 14)}px monospace`;
         ctx.fillStyle = Math.random() > 0.7 ? config.digitalColor : config.leafColor;
         ctx.fillText(Math.random() > 0.5 ? '0' : '1', 0, 0);
     } else {
-        // Pixelated square leaf
-        const size = randomRange(3, 8);
+        // Pixelated square leaf - Increased size
+        const size = randomRange(5, 12);
         ctx.fillStyle = config.leafColor;
         ctx.fillRect(0, 0, size, size);
     }
@@ -47,9 +48,15 @@ function drawDigitalLeaf(x, y) {
 
 function drawBranch(x, y, length, angle, width, depth) {
     if (depth === 0) {
-        // Draw digital leaves at the end
-        drawDigitalLeaf(x, y);
-        if (Math.random() > 0.5) drawDigitalLeaf(x + randomRange(-15, 15), y + randomRange(-15, 15));
+        // Draw a DENSE cluster of leaves at the end
+        // Increased from 1-2 to 5-10 leaves for more volume
+        const leafCount = Math.floor(randomRange(5, 10));
+        for (let i = 0; i < leafCount; i++) {
+            // Spread them out a bit more to create a "canopy" feel
+            const offsetX = randomRange(-25, 25);
+            const offsetY = randomRange(-25, 25);
+            drawDigitalLeaf(x + offsetX, y + offsetY);
+        }
         return;
     }
 
@@ -76,7 +83,8 @@ function drawBranch(x, y, length, angle, width, depth) {
     ctx.globalAlpha = 1.0;
 
     // Recursive calls
-    const branchCount = Math.floor(randomRange(1, 3.5));
+    // Slightly increased branching factor for fuller trees
+    const branchCount = Math.floor(randomRange(2, 4));
 
     for (let i = 0; i < branchCount; i++) {
         const newAngle = angle + randomRange(-config.branchAngle, config.branchAngle);
@@ -86,7 +94,9 @@ function drawBranch(x, y, length, angle, width, depth) {
         if (newLength > 5) {
             drawBranch(endX, endY, newLength, newAngle, newWidth, depth - 1);
         } else {
+            // If branch is too small, draw a leaf cluster here too
             drawDigitalLeaf(endX, endY);
+            if (Math.random() > 0.5) drawDigitalLeaf(endX + randomRange(-10, 10), endY + randomRange(-10, 10));
         }
     }
 }
