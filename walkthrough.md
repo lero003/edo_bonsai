@@ -15,6 +15,7 @@ I have successfully transformed the project into the "Edo-AI Bonsai" experience!
     - **Sumi-e Style**: Branches are drawn with varying widths and opacity to mimic ink wash painting.
     - **Digital Elements**: Leaves are a mix of organic shapes and digital artifacts (binary '0'/'1' and pixelated blocks).
     - **Enhanced Foliage**: Increased leaf density and cluster size for a lush, greener appearance.
+    - **Sumi-e Background**: Procedurally generated ink wash mountains and clouds add depth and atmosphere.
     - **Animation**: The bonsai grows recursively with organic randomness.
 
 ### 3. Integrated Experience (UI)

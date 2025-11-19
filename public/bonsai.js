@@ -101,9 +101,73 @@ function drawBranch(x, y, length, angle, width, depth) {
     }
 }
 
+function drawInkMountain(baseY, color, amplitude) {
+    ctx.beginPath();
+    ctx.moveTo(0, baseY);
+
+    let x = 0;
+    while (x < canvas.width) {
+        const nextX = x + randomRange(50, 150);
+        const nextY = baseY - randomRange(0, amplitude);
+        const cpX = (x + nextX) / 2;
+        const cpY = baseY - randomRange(amplitude * 0.5, amplitude * 1.5); // Control point higher for peaks
+
+        ctx.quadraticCurveTo(cpX, cpY, nextX, nextY);
+        x = nextX;
+    }
+
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.closePath();
+
+    ctx.fillStyle = color;
+    ctx.fill();
+}
+
+function drawInkCloud(x, y, size) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    const puffs = Math.floor(randomRange(3, 6));
+    ctx.fillStyle = 'rgba(200, 200, 200, 0.1)'; // Very faint gray
+
+    for (let i = 0; i < puffs; i++) {
+        const puffSize = size * randomRange(0.5, 1.0);
+        const offsetX = randomRange(-size / 2, size / 2);
+        const offsetY = randomRange(-size / 4, size / 4);
+
+        ctx.beginPath();
+        ctx.arc(offsetX, offsetY, puffSize, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+function drawBackground() {
+    // Distant mountains (lighter)
+    drawInkMountain(canvas.height * 0.8, 'rgba(44, 44, 44, 0.05)', 100);
+
+    // Closer mountains (slightly darker)
+    drawInkMountain(canvas.height * 0.9, 'rgba(44, 44, 44, 0.1)', 60);
+
+    // Clouds
+    const cloudCount = 5;
+    for (let i = 0; i < cloudCount; i++) {
+        drawInkCloud(
+            randomRange(0, canvas.width),
+            randomRange(0, canvas.height * 0.5),
+            randomRange(50, 150)
+        );
+    }
+}
+
 function generateBonsai() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Background first
+    drawBackground();
 
     // Start from bottom center
     const startX = canvas.width / 2;
