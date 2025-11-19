@@ -78,6 +78,31 @@ h1 {
     letter-spacing: 0.1em;
 }
 
+.haiku-container {
+    position: absolute;
+    top: 150px;
+    right: 60px;
+    /* Vertical writing for Japanese aesthetic */
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    pointer-events: none;
+}
+
+.haiku-text {
+    font-size: 1.4rem;
+    line-height: 2;
+    color: var(--text-color);
+    font-family: 'Noto Serif JP', serif;
+    letter-spacing: 0.2em;
+    border-right: 1px solid rgba(44, 44, 44, 0.2);
+    padding-right: 20px;
+    transition: opacity 1s ease;
+}
+
 /* Regenerate Button (Subtle) */
 .controls {
     position: absolute;

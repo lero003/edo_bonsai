@@ -9,85 +9,84 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Configuration for the Wabi-Sabi aesthetic
+// Configuration for the Wabi-Sabi + Digital aesthetic
 const config = {
     trunkColor: '#2c2c2c', // Sumi ink
-    leafColor: 'rgba(74, 108, 74, 0.6)', // Moss green with transparency
-    leafColor2: 'rgba(143, 168, 143, 0.5)', // Pale green
+    leafColor: 'rgba(74, 108, 74, 0.8)', // Moss green
+    digitalColor: '#00ff00', // Matrix green
     bgColor: '#fcfbf9',
     maxDepth: 12,
-    branchAngle: 0.3, // Base angle variance
-    growthFactor: 0.8, // How much branches shorten
+    branchAngle: 0.4,
+    growthFactor: 0.8,
 };
 
 function randomRange(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-function drawLeaf(x, y) {
+function drawDigitalLeaf(x, y) {
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(randomRange(0, Math.PI * 2));
 
-    const size = randomRange(5, 15);
+    // Digital Glitch / Binary Leaf
+    const isBinary = Math.random() > 0.5;
 
-    // Draw a simple organic leaf/needle cluster
-    ctx.fillStyle = Math.random() > 0.5 ? config.leafColor : config.leafColor2;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, size, size / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
+    if (isBinary) {
+        ctx.font = '10px monospace';
+        ctx.fillStyle = Math.random() > 0.7 ? config.digitalColor : config.leafColor;
+        ctx.fillText(Math.random() > 0.5 ? '0' : '1', 0, 0);
+    } else {
+        // Pixelated square leaf
+        const size = randomRange(3, 8);
+        ctx.fillStyle = config.leafColor;
+        ctx.fillRect(0, 0, size, size);
+    }
 
     ctx.restore();
 }
 
 function drawBranch(x, y, length, angle, width, depth) {
     if (depth === 0) {
-        // Draw leaves at the end
-        drawLeaf(x, y);
-        // Maybe draw a few more around it for volume
-        if (Math.random() > 0.5) drawLeaf(x + randomRange(-10, 10), y + randomRange(-10, 10));
+        // Draw digital leaves at the end
+        drawDigitalLeaf(x, y);
+        if (Math.random() > 0.5) drawDigitalLeaf(x + randomRange(-15, 15), y + randomRange(-15, 15));
         return;
     }
 
-    // Calculate new end point
+    // Calculate new end point with some organic curvature
+    // Bezier curve control point
+    const cpX = x + Math.cos(angle) * (length / 2) + randomRange(-10, 10);
+    const cpY = y + Math.sin(angle) * (length / 2) + randomRange(-10, 10);
+
     const endX = x + Math.cos(angle) * length;
     const endY = y + Math.sin(angle) * length;
 
-    // Draw the branch
+    // Draw the branch (Sumi-e style: varying width)
     ctx.beginPath();
     ctx.moveTo(x, y);
-
-    // Quadratic curve for more organic look? Or simple line?
-    // Let's stick to lines but maybe slight curves could be nice later.
-    // For now, simple lines with varying width.
-    ctx.lineTo(endX, endY);
+    ctx.quadraticCurveTo(cpX, cpY, endX, endY);
 
     ctx.lineWidth = width;
     ctx.strokeStyle = config.trunkColor;
     ctx.lineCap = 'round';
+
+    // Ink bleed effect (lower opacity for edges)
+    ctx.globalAlpha = 0.8;
     ctx.stroke();
+    ctx.globalAlpha = 1.0;
 
     // Recursive calls
-    // Number of branches: usually 2, sometimes 1 or 3
-    const branchCount = Math.floor(randomRange(1, 4));
+    const branchCount = Math.floor(randomRange(1, 3.5));
 
     for (let i = 0; i < branchCount; i++) {
-        // Variation in angle
-        const newAngle = angle + randomRange(-config.branchAngle, config.branchAngle) + (Math.random() - 0.5);
-
-        // Variation in length
+        const newAngle = angle + randomRange(-config.branchAngle, config.branchAngle);
         const newLength = length * config.growthFactor * randomRange(0.7, 1.0);
-
-        // Variation in width
         const newWidth = width * 0.7;
 
-        // Don't continue if too small
         if (newLength > 5) {
-            // Add a slight delay for "growth" animation effect? 
-            // For now, instant generation.
             drawBranch(endX, endY, newLength, newAngle, newWidth, depth - 1);
         } else {
-            drawLeaf(endX, endY);
+            drawDigitalLeaf(endX, endY);
         }
     }
 }
@@ -103,12 +102,9 @@ function generateBonsai() {
     // Initial trunk
     const trunkLength = randomRange(canvas.height * 0.15, canvas.height * 0.25);
     const trunkWidth = randomRange(15, 25);
-
-    // Slight lean
     const startAngle = -Math.PI / 2 + randomRange(-0.1, 0.1);
 
     drawBranch(startX, startY, trunkLength, startAngle, trunkWidth, config.maxDepth);
 }
 
-// Export for use in app.js
 window.generateBonsai = generateBonsai;
