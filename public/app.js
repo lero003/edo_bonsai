@@ -1,3 +1,16 @@
+// script.js の一番上にこれだけ追加！！（これで最強）
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('regenerateBtn');
+    
+    // 画像とか重いのが読み込まれてからでも確実にアニメ開始する方法
+    if (document.readyState === 'complete') {
+        btn.classList.add('loaded');
+    } else {
+        window.addEventListener('load', () => {
+            setTimeout(() => btn.classList.add('loaded'), 100);
+        });
+    }
+
 document.addEventListener('DOMContentLoaded', async () => {
     const regenerateBtn = document.getElementById('regenerateBtn');
     const haikuContainer = document.getElementById('haikuContainer');
