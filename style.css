@@ -79,7 +79,7 @@ canvas {
 
 /* Header */
 header {
-    grid-column: 1;
+    grid-column: 1 / -1;
     grid-row: 1;
     display: flex;
     flex-direction: column;
@@ -87,23 +87,129 @@ header {
     animation: fadeIn 1.5s ease-out;
 }
 
-/* ... (h1, subtitle styles unchanged) ... */
+h1 {
+    font-size: 2.5rem;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    color: var(--text-color);
+    margin-bottom: 5px;
+    position: relative;
+    padding-left: 20px;
+}
+
+h1::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10%;
+    height: 80%;
+    width: 2px;
+    background-color: var(--accent-color);
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: var(--secondary-accent);
+    margin-left: 25px;
+    font-style: italic;
+    letter-spacing: 0.15em;
+    font-weight: 300;
+}
+
+/* Haiku Container */
+.haiku-container {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    align-self: center;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    height: 60vh;
+    max-height: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    pointer-events: none;
+    margin-right: 20px;
+    animation: fadeIn 2s ease-out 0.5s backwards;
+}
+
+.haiku-text {
+    font-size: 1.6rem;
+    line-height: 2.2;
+    color: var(--text-color);
+    font-family: 'Noto Serif JP', serif;
+    letter-spacing: 0.1em;
+    border-right: 1px solid rgba(93, 124, 93, 0.3);
+    padding-right: 25px;
+    transition: opacity 1s ease;
+    /* Text outline for readability */
+    text-shadow:
+        2px 2px 0 var(--bg-color),
+        -2px -2px 0 var(--bg-color),
+        2px -2px 0 var(--bg-color),
+        -2px 2px 0 var(--bg-color),
+        2px 0px 0 var(--bg-color),
+        -2px 0px 0 var(--bg-color),
+        0px 2px 0 var(--bg-color),
+        0px -2px 0 var(--bg-color);
+}
 
 /* Controls */
 .controls {
-    grid-column: 2;
-    grid-row: 1;
+    grid-column: 1 / -1;
+    grid-row: 3;
     display: flex;
     justify-content: flex-end;
-    align-items: flex-start;
+    align-items: flex-end;
     pointer-events: auto;
     animation: fadeIn 2s ease-out 1s backwards;
-    padding-top: 10px;
-    /* Align with header */
-    padding-right: 0;
+    padding-bottom: 40px;
+    padding-right: 40px;
 }
 
-/* ... (Button styles unchanged) ... */
+/* Button */
+button#regenerateBtn {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    padding: 12px 30px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    border-radius: 50px;
+    /* Pill shape */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+button#regenerateBtn:hover {
+    background: var(--accent-color);
+    color: var(--bg-color);
+    box-shadow: 0 4px 15px rgba(93, 124, 93, 0.3);
+    transform: translateY(-1px);
+}
+
+button#regenerateBtn:active {
+    transform: translateY(1px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
@@ -114,27 +220,52 @@ header {
     }
 
     header {
-        grid-column: 1;
-        /* Reset grid column */
         align-items: center;
         text-align: center;
     }
 
-    /* ... (h1, subtitle mobile styles unchanged) ... */
-
-    .controls {
-        grid-column: 1;
-        /* Reset grid column */
-        grid-row: 3;
-        /* Move back to bottom row */
-        justify-content: center;
-        align-items: flex-end;
-        /* Reset alignment */
-        padding-bottom: 20px;
-        padding-top: 0;
+    h1 {
+        font-size: 1.8rem;
+        padding-left: 0;
+        margin-bottom: 5px;
     }
 
-    /* ... (Rest of mobile styles) ... */
+    h1::before {
+        display: none;
+        /* Remove side bar on mobile for cleaner look */
+    }
+
+    .subtitle {
+        margin-left: 0;
+        font-size: 0.8rem;
+    }
+
+    .haiku-container {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: center;
+        align-self: center;
+        margin-right: 0;
+        height: auto;
+        max-height: 60vh;
+        /* Keep vertical for aesthetic, but maybe adjust size */
+    }
+
+    .haiku-text {
+        font-size: 1.3rem;
+        line-height: 1.8;
+        border-right: none;
+        /* Remove border on mobile */
+        padding-right: 0;
+        padding-top: 20px;
+        border-top: 1px solid rgba(93, 124, 93, 0.3);
+        /* Top border instead */
+    }
+
+    .controls {
+        justify-content: center;
+        padding-bottom: 20px;
+    }
 
     button#regenerateBtn {
         padding: 12px 40px;
