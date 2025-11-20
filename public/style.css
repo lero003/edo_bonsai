@@ -169,26 +169,44 @@ h1::before {
 }
 
 /* Button */
+/* ボタンの最終形＋アニメーション全部ここにまとめちゃった♡ */
 button#regenerateBtn {
     background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     color: var(--accent-color);
     border: 1px solid var(--accent-color);
-    padding: 12px 30px;
+    padding: 14px 34px;
     font-family: 'Noto Serif JP', serif;
     font-size: 0.85rem;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.4s ease;
     border-radius: 50px;
-    /* Pill shape */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    /* Position */
-    position: absolute;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    
+    /* 絶対位置＋最初から右下に固定 */
+    position: fixed;        /* ← absoluteでもいいけどfixedのほうがスクロールしても追従して可愛い♡ */
     bottom: 50px;
     right: 50px;
+    z-index: 100;
+
+    /* 最初は透明＋ちょっと下＋ちょっと小さめ */
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+    transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1); /* 超気持ちいいイージング */
+
+    /* ホバーエフェクトも可愛く */
+    &:hover {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+}
+
+/* アニメ開始用のクラス */
+button#regenerateBtn.appear {
+    opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
 button#regenerateBtn:hover {
