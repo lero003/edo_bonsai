@@ -185,6 +185,10 @@ button#regenerateBtn {
     border-radius: 50px;
     /* Pill shape */
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    /* Position */
+    position: absolute;
+    bottom: 50px;
+    right: 50px;
 }
 
 button#regenerateBtn:hover {
