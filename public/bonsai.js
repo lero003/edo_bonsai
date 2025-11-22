@@ -34,7 +34,7 @@ const config = {
         spring: {
             leafColors: ['rgba(255, 183, 197, 0.8)', 'rgba(255, 192, 203, 0.8)', '#ff69b4'], // Sakura pinks
             digitalColor: '#ff1493', // Deep pink
-            particleColor: 'rgba(255, 183, 197, 0.6)',
+            particleColor: 'rgba(255, 105, 180, 0.8)', // HotPink, more visible
             particleType: 'petal'
         },
         summer: {
@@ -46,13 +46,13 @@ const config = {
         autumn: {
             leafColors: ['rgba(204, 85, 0, 0.8)', 'rgba(218, 165, 32, 0.8)', 'rgba(165, 42, 42, 0.8)'], // Orange, Gold, Brown
             digitalColor: '#ff4500', // Orange Red
-            particleColor: 'rgba(204, 85, 0, 0.6)',
+            particleColor: 'rgba(204, 85, 0, 0.8)', // Darker Orange
             particleType: 'leaf'
         },
         winter: {
             leafColors: ['rgba(255, 255, 255, 0.9)', 'rgba(240, 248, 255, 0.9)'], // White, AliceBlue
             digitalColor: '#00ffff', // Cyan
-            particleColor: 'rgba(255, 255, 255, 0.8)',
+            particleColor: 'rgba(200, 220, 255, 0.9)', // Light Blue-ish for visibility
             particleType: 'snow'
         }
     }
@@ -236,11 +236,21 @@ class Particle {
             ctx.beginPath();
             ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
             ctx.fill();
+            // Add subtle outline for snow to pop against white bg
+            ctx.strokeStyle = 'rgba(200, 200, 255, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
         } else {
             // Petal or Leaf shape
             ctx.beginPath();
             ctx.ellipse(0, 0, this.size, this.size / 2, 0, 0, Math.PI * 2);
             ctx.fill();
+            // Add subtle outline for petals too if needed, but color change might be enough
+            if (this.type === 'petal') {
+                ctx.strokeStyle = 'rgba(255, 105, 180, 0.3)';
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            }
         }
         ctx.restore();
     }
