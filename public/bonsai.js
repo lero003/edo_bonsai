@@ -139,31 +139,6 @@ function drawBranch(ctxToDraw, x, y, length, angle, width, depth, seasonConfig) 
     }
 }
 
-function drawBrushStroke(ctx, x1, y1, x2, y2, width, roughness) {
-    const dist = Math.hypot(x2 - x1, y2 - y1);
-    const angle = Math.atan2(y2 - y1, x2 - x1);
-    const steps = Math.ceil(dist / 2); // Draw every 2 pixels
-
-    ctx.save();
-    for (let i = 0; i < steps; i++) {
-        const t = i / steps;
-        const x = x1 + (x2 - x1) * t;
-        const y = y1 + (y2 - y1) * t;
-
-        // Add roughness
-        const offsetX = randomRange(-roughness, roughness);
-        const offsetY = randomRange(-roughness, roughness);
-
-        // Vary width slightly
-        const currentWidth = width * randomRange(0.5, 1.5) * (1 - Math.abs(0.5 - t)); // Taper ends slightly
-
-        ctx.beginPath();
-        ctx.arc(x + offsetX, y + offsetY, currentWidth / 2, 0, Math.PI * 2);
-        ctx.fill();
-    }
-    ctx.restore();
-}
-
 function drawInkMountain(ctxToDraw, baseY, color, amplitude) {
     // Create a path for the mountain ridge
     let points = [];
@@ -180,54 +155,74 @@ function drawInkMountain(ctxToDraw, baseY, color, amplitude) {
     points.push({ x: canvas.width, y: canvas.height });
     points.push({ x: 0, y: canvas.height });
 
-    // Fill the main shape first (base layer)
+    ctxToDraw.save();
+
+    // Soft edge effect
+    ctxToDraw.shadowColor = color;
+    ctxToDraw.shadowBlur = 20;
+    ctxToDraw.shadowOffsetX = 0;
+    ctxToDraw.shadowOffsetY = 0;
+
+    // Gradient Fill (Tarashikomi - dripping in effect)
+    // Fade from color at top to transparent/mist at bottom
+    const gradient = ctxToDraw.createLinearGradient(0, baseY - amplitude, 0, canvas.height);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(0.4, color);
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)'); // Fade to mist
+
+    ctxToDraw.fillStyle = gradient;
+
+    // Draw the shape
     ctxToDraw.beginPath();
     ctxToDraw.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-        // Use simple lines for the fill shape, or curves
-        ctxToDraw.lineTo(points[i].x, points[i].y);
+
+    // Smooth curves for the ridge
+    for (let i = 1; i < points.length - 2; i++) { // Start from 1 to use points[i-1] and points[i]
+        const p1 = points[i - 1];
+        const p2 = points[i];
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        ctxToDraw.quadraticCurveTo(p1.x, p1.y, midX, midY);
     }
+    // Connect to corners
+    const lastRidge = points[points.length - 3];
+    ctxToDraw.lineTo(lastRidge.x, lastRidge.y);
+    ctxToDraw.lineTo(points[points.length - 2].x, points[points.length - 2].y); // Bottom Right
+    ctxToDraw.lineTo(points[points.length - 1].x, points[points.length - 1].y); // Bottom Left
+
     ctxToDraw.closePath();
-    ctxToDraw.fillStyle = color;
     ctxToDraw.fill();
 
-    // Draw the ridge with "brush strokes"
-    ctxToDraw.fillStyle = config.trunkColor; // Use dark ink color for the ridge line
-    const ridgePoints = points.slice(0, points.length - 2); // Exclude bottom corners
+    // Layering: Draw a second, slightly offset layer for depth (Bokashi)
+    ctxToDraw.globalCompositeOperation = 'source-atop';
+    ctxToDraw.fillStyle = color;
+    ctxToDraw.globalAlpha = 0.3;
+    ctxToDraw.shadowBlur = 40;
+    ctxToDraw.fill();
 
-    // Draw segments
-    for (let i = 0; i < ridgePoints.length - 1; i++) {
-        const p1 = ridgePoints[i];
-        const p2 = ridgePoints[i + 1];
-
-        // Draw multiple strokes for texture
-        const strokes = 3;
-        for (let j = 0; j < strokes; j++) {
-            ctxToDraw.globalAlpha = randomRange(0.1, 0.3);
-            // Offset slightly for each stroke
-            const offX = randomRange(-5, 5);
-            const offY = randomRange(-5, 5);
-            drawBrushStroke(ctxToDraw, p1.x + offX, p1.y + offY, p2.x + offX, p2.y + offY, randomRange(2, 5), 2);
-        }
-    }
-    ctxToDraw.globalAlpha = 1.0;
+    ctxToDraw.restore();
 }
 
 function drawInkCloud(ctxToDraw, x, y, size) {
     ctxToDraw.save();
     ctxToDraw.translate(x, y);
 
-    const puffs = Math.floor(randomRange(5, 10));
-    ctxToDraw.fillStyle = 'rgba(200, 200, 200, 0.05)'; // Very faint
+    const puffs = Math.floor(randomRange(3, 6));
 
     for (let i = 0; i < puffs; i++) {
-        const puffSize = size * randomRange(0.5, 1.0);
+        const puffSize = size * randomRange(0.6, 1.2);
         const offsetX = randomRange(-size / 2, size / 2);
         const offsetY = randomRange(-size / 4, size / 4);
 
-        // Distorted ellipse for ink wash look
+        // Radial Gradient for soft puff
+        const gradient = ctxToDraw.createRadialGradient(offsetX, offsetY, 0, offsetX, offsetY, puffSize);
+        gradient.addColorStop(0, 'rgba(200, 200, 200, 0.08)'); // Center
+        gradient.addColorStop(0.6, 'rgba(200, 200, 200, 0.02)');
+        gradient.addColorStop(1, 'rgba(200, 200, 200, 0)'); // Edge
+
+        ctxToDraw.fillStyle = gradient;
         ctxToDraw.beginPath();
-        ctxToDraw.ellipse(offsetX, offsetY, puffSize, puffSize * randomRange(0.5, 0.8), randomRange(0, Math.PI), 0, Math.PI * 2);
+        ctxToDraw.arc(offsetX, offsetY, puffSize, 0, Math.PI * 2);
         ctxToDraw.fill();
     }
 
@@ -235,19 +230,20 @@ function drawInkCloud(ctxToDraw, x, y, size) {
 }
 
 function drawBackground(ctxToDraw) {
-    // Distant mountains (lighter, less detail)
-    drawInkMountain(ctxToDraw, canvas.height * 0.8, 'rgba(44, 44, 44, 0.05)', 100);
-    // Closer mountains (slightly darker)
-    drawInkMountain(ctxToDraw, canvas.height * 0.9, 'rgba(44, 44, 44, 0.1)', 60);
+    // Distant mountains (Very faint, misty)
+    drawInkMountain(ctxToDraw, canvas.height * 0.75, 'rgba(40, 40, 40, 0.08)', 120);
 
-    // Clouds
-    const cloudCount = 5;
+    // Mid-ground mountains
+    drawInkMountain(ctxToDraw, canvas.height * 0.85, 'rgba(30, 30, 30, 0.12)', 80);
+
+    // Clouds (Soft wash)
+    const cloudCount = 4;
     for (let i = 0; i < cloudCount; i++) {
         drawInkCloud(
             ctxToDraw,
             randomRange(0, canvas.width),
-            randomRange(0, canvas.height * 0.5),
-            randomRange(50, 150)
+            randomRange(0, canvas.height * 0.4),
+            randomRange(80, 200)
         );
     }
 }
