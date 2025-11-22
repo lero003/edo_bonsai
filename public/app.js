@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadContent() {
         // Generate new visual
         if (window.generateBonsai) {
+            console.log("Triggering bonsai generation...");
             window.generateBonsai();
         }
 

@@ -1,10 +1,24 @@
 const canvas = document.getElementById('bonsaiCanvas');
 const ctx = canvas.getContext('2d');
 
+// Animation State
+let animationId = null;
+let staticSceneCanvas = null;
+let particles = [];
+let flyingObjects = [];
+let currentSeason = 'summer';
+
 // Set canvas size to full screen
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    if (staticSceneCanvas) {
+        // If we resize, we might need to regenerate or at least re-center. 
+        // For now, let's just clear the static scene to force a regenerate if needed, 
+        // but strictly speaking the user might just want it to scale.
+        // Simpler approach: just let the next generation fix it, or re-render if we stored the tree data.
+        // For this iteration, we'll just accept it might look cropped until regenerated.
+    }
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -12,78 +26,103 @@ resizeCanvas();
 // Configuration for the Wabi-Sabi + Digital aesthetic
 const config = {
     trunkColor: '#2c2c2c', // Sumi ink
-    leafColor: 'rgba(74, 108, 74, 0.8)', // Moss green
-    digitalColor: '#00ff00', // Matrix green
     bgColor: '#fcfbf9',
     maxDepth: 12,
     branchAngle: 0.4,
     growthFactor: 0.8,
+    seasons: {
+        spring: {
+            leafColors: ['rgba(255, 183, 197, 0.8)', 'rgba(255, 192, 203, 0.8)', '#ff69b4'], // Sakura pinks
+            digitalColor: '#ff1493', // Deep pink
+            particleColor: 'rgba(255, 183, 197, 0.6)',
+            particleType: 'petal'
+        },
+        summer: {
+            leafColors: ['rgba(74, 108, 74, 0.8)'], // Moss green
+            digitalColor: '#00ff00', // Matrix green
+            particleColor: null, // No particles usually, or maybe fireflies?
+            particleType: 'none'
+        },
+        autumn: {
+            leafColors: ['rgba(204, 85, 0, 0.8)', 'rgba(218, 165, 32, 0.8)', 'rgba(165, 42, 42, 0.8)'], // Orange, Gold, Brown
+            digitalColor: '#ff4500', // Orange Red
+            particleColor: 'rgba(204, 85, 0, 0.6)',
+            particleType: 'leaf'
+        },
+        winter: {
+            leafColors: ['rgba(255, 255, 255, 0.9)', 'rgba(240, 248, 255, 0.9)'], // White, AliceBlue
+            digitalColor: '#00ffff', // Cyan
+            particleColor: 'rgba(255, 255, 255, 0.8)',
+            particleType: 'snow'
+        }
+    }
 };
 
 function randomRange(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-function drawDigitalLeaf(x, y) {
-    ctx.save();
-    ctx.translate(x, y);
+function getRandomElement(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function drawDigitalLeaf(ctxToDraw, x, y, seasonConfig) {
+    ctxToDraw.save();
+    ctxToDraw.translate(x, y);
 
     // Digital Glitch / Binary Leaf
     const isBinary = Math.random() > 0.5;
+    const leafColor = getRandomElement(seasonConfig.leafColors);
 
     if (isBinary) {
         // Increased font size for more visibility
-        ctx.font = `${randomRange(10, 14)}px monospace`;
-        ctx.fillStyle = Math.random() > 0.7 ? config.digitalColor : config.leafColor;
-        ctx.fillText(Math.random() > 0.5 ? '0' : '1', 0, 0);
+        ctxToDraw.font = `${randomRange(10, 14)}px monospace`;
+        ctxToDraw.fillStyle = Math.random() > 0.7 ? seasonConfig.digitalColor : leafColor;
+        ctxToDraw.fillText(Math.random() > 0.5 ? '0' : '1', 0, 0);
     } else {
         // Pixelated square leaf - Increased size
         const size = randomRange(5, 12);
-        ctx.fillStyle = config.leafColor;
-        ctx.fillRect(0, 0, size, size);
+        ctxToDraw.fillStyle = leafColor;
+        ctxToDraw.fillRect(0, 0, size, size);
     }
 
-    ctx.restore();
+    ctxToDraw.restore();
 }
 
-function drawBranch(x, y, length, angle, width, depth) {
+function drawBranch(ctxToDraw, x, y, length, angle, width, depth, seasonConfig) {
     if (depth === 0) {
         // Draw a DENSE cluster of leaves at the end
-        // Increased from 1-2 to 5-10 leaves for more volume
         const leafCount = Math.floor(randomRange(5, 10));
         for (let i = 0; i < leafCount; i++) {
-            // Spread them out a bit more to create a "canopy" feel
             const offsetX = randomRange(-25, 25);
             const offsetY = randomRange(-25, 25);
-            drawDigitalLeaf(x + offsetX, y + offsetY);
+            drawDigitalLeaf(ctxToDraw, x + offsetX, y + offsetY, seasonConfig);
         }
         return;
     }
 
     // Calculate new end point with some organic curvature
-    // Bezier curve control point
     const cpX = x + Math.cos(angle) * (length / 2) + randomRange(-10, 10);
     const cpY = y + Math.sin(angle) * (length / 2) + randomRange(-10, 10);
 
     const endX = x + Math.cos(angle) * length;
     const endY = y + Math.sin(angle) * length;
 
-    // Draw the branch (Sumi-e style: varying width)
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.quadraticCurveTo(cpX, cpY, endX, endY);
+    // Draw the branch
+    ctxToDraw.beginPath();
+    ctxToDraw.moveTo(x, y);
+    ctxToDraw.quadraticCurveTo(cpX, cpY, endX, endY);
 
-    ctx.lineWidth = width;
-    ctx.strokeStyle = config.trunkColor;
-    ctx.lineCap = 'round';
+    ctxToDraw.lineWidth = width;
+    ctxToDraw.strokeStyle = config.trunkColor;
+    ctxToDraw.lineCap = 'round';
 
-    // Ink bleed effect (lower opacity for edges)
-    ctx.globalAlpha = 0.8;
-    ctx.stroke();
-    ctx.globalAlpha = 1.0;
+    // Ink bleed effect
+    ctxToDraw.globalAlpha = 0.8;
+    ctxToDraw.stroke();
+    ctxToDraw.globalAlpha = 1.0;
 
     // Recursive calls
-    // Slightly increased branching factor for fuller trees
     const branchCount = Math.floor(randomRange(2, 4));
 
     for (let i = 0; i < branchCount; i++) {
@@ -92,69 +131,68 @@ function drawBranch(x, y, length, angle, width, depth) {
         const newWidth = width * 0.7;
 
         if (newLength > 5) {
-            drawBranch(endX, endY, newLength, newAngle, newWidth, depth - 1);
+            drawBranch(ctxToDraw, endX, endY, newLength, newAngle, newWidth, depth - 1, seasonConfig);
         } else {
-            // If branch is too small, draw a leaf cluster here too
-            drawDigitalLeaf(endX, endY);
-            if (Math.random() > 0.5) drawDigitalLeaf(endX + randomRange(-10, 10), endY + randomRange(-10, 10));
+            drawDigitalLeaf(ctxToDraw, endX, endY, seasonConfig);
+            if (Math.random() > 0.5) drawDigitalLeaf(ctxToDraw, endX + randomRange(-10, 10), endY + randomRange(-10, 10), seasonConfig);
         }
     }
 }
 
-function drawInkMountain(baseY, color, amplitude) {
-    ctx.beginPath();
-    ctx.moveTo(0, baseY);
+function drawInkMountain(ctxToDraw, baseY, color, amplitude) {
+    ctxToDraw.beginPath();
+    ctxToDraw.moveTo(0, baseY);
 
     let x = 0;
     while (x < canvas.width) {
         const nextX = x + randomRange(50, 150);
         const nextY = baseY - randomRange(0, amplitude);
         const cpX = (x + nextX) / 2;
-        const cpY = baseY - randomRange(amplitude * 0.5, amplitude * 1.5); // Control point higher for peaks
+        const cpY = baseY - randomRange(amplitude * 0.5, amplitude * 1.5);
 
-        ctx.quadraticCurveTo(cpX, cpY, nextX, nextY);
+        ctxToDraw.quadraticCurveTo(cpX, cpY, nextX, nextY);
         x = nextX;
     }
 
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(0, canvas.height);
-    ctx.closePath();
+    ctxToDraw.lineTo(canvas.width, canvas.height);
+    ctxToDraw.lineTo(0, canvas.height);
+    ctxToDraw.closePath();
 
-    ctx.fillStyle = color;
-    ctx.fill();
+    ctxToDraw.fillStyle = color;
+    ctxToDraw.fill();
 }
 
-function drawInkCloud(x, y, size) {
-    ctx.save();
-    ctx.translate(x, y);
+function drawInkCloud(ctxToDraw, x, y, size) {
+    ctxToDraw.save();
+    ctxToDraw.translate(x, y);
 
     const puffs = Math.floor(randomRange(3, 6));
-    ctx.fillStyle = 'rgba(200, 200, 200, 0.1)'; // Very faint gray
+    ctxToDraw.fillStyle = 'rgba(200, 200, 200, 0.1)';
 
     for (let i = 0; i < puffs; i++) {
         const puffSize = size * randomRange(0.5, 1.0);
         const offsetX = randomRange(-size / 2, size / 2);
         const offsetY = randomRange(-size / 4, size / 4);
 
-        ctx.beginPath();
-        ctx.arc(offsetX, offsetY, puffSize, 0, Math.PI * 2);
-        ctx.fill();
+        ctxToDraw.beginPath();
+        ctxToDraw.arc(offsetX, offsetY, puffSize, 0, Math.PI * 2);
+        ctxToDraw.fill();
     }
 
-    ctx.restore();
+    ctxToDraw.restore();
 }
 
-function drawBackground() {
-    // Distant mountains (lighter)
-    drawInkMountain(canvas.height * 0.8, 'rgba(44, 44, 44, 0.05)', 100);
-
-    // Closer mountains (slightly darker)
-    drawInkMountain(canvas.height * 0.9, 'rgba(44, 44, 44, 0.1)', 60);
+function drawBackground(ctxToDraw) {
+    // Distant mountains
+    drawInkMountain(ctxToDraw, canvas.height * 0.8, 'rgba(44, 44, 44, 0.05)', 100);
+    // Closer mountains
+    drawInkMountain(ctxToDraw, canvas.height * 0.9, 'rgba(44, 44, 44, 0.1)', 60);
 
     // Clouds
     const cloudCount = 5;
     for (let i = 0; i < cloudCount; i++) {
         drawInkCloud(
+            ctxToDraw,
             randomRange(0, canvas.width),
             randomRange(0, canvas.height * 0.5),
             randomRange(50, 150)
@@ -162,23 +200,202 @@ function drawBackground() {
     }
 }
 
-function generateBonsai() {
-    // Clear canvas
+// --- Animation Classes ---
+
+class Particle {
+    constructor(type, color) {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height - canvas.height; // Start above
+        this.size = randomRange(2, 5);
+        this.speedY = randomRange(1, 3);
+        this.speedX = randomRange(-1, 1);
+        this.color = color;
+        this.type = type;
+        this.rotation = Math.random() * Math.PI * 2;
+        this.rotationSpeed = randomRange(-0.05, 0.05);
+    }
+
+    update() {
+        this.y += this.speedY;
+        this.x += this.speedX + Math.sin(this.y * 0.01) * 0.5; // Swaying
+        this.rotation += this.rotationSpeed;
+
+        if (this.y > canvas.height) {
+            this.y = -10;
+            this.x = Math.random() * canvas.width;
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.fillStyle = this.color;
+
+        if (this.type === 'snow') {
+            ctx.beginPath();
+            ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Petal or Leaf shape
+            ctx.beginPath();
+            ctx.ellipse(0, 0, this.size, this.size / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+
+class FlyingObject {
+    constructor() {
+        this.reset();
+    }
+
+    reset() {
+        this.type = Math.random() > 0.5 ? 'bird' : 'ufo';
+        this.y = randomRange(50, canvas.height * 0.4);
+        this.direction = Math.random() > 0.5 ? 1 : -1;
+        this.x = this.direction === 1 ? -50 : canvas.width + 50;
+        this.speed = randomRange(0.5, 1.5); // Slower speed
+        this.active = false;
+        this.cooldown = randomRange(200, 500); // Frames to wait
+    }
+
+    update() {
+        if (!this.active) {
+            this.cooldown--;
+            if (this.cooldown <= 0) {
+                this.active = true;
+                // Randomize type again on respawn
+                this.type = Math.random() > 0.8 ? 'ufo' : 'bird'; // UFOs are rarer
+            }
+            return;
+        }
+
+        this.x += this.speed * this.direction;
+
+        if ((this.direction === 1 && this.x > canvas.width + 50) ||
+            (this.direction === -1 && this.x < -50)) {
+            this.reset();
+        }
+    }
+
+    draw(ctx) {
+        if (!this.active) return;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        if (this.direction === -1) ctx.scale(-1, 1); // Flip if going left
+
+        if (this.type === 'bird') {
+            ctx.strokeStyle = '#2c2c2c';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            // Simple V shape bird
+            ctx.moveTo(-10, -5);
+            ctx.quadraticCurveTo(0, 5, 10, -5);
+            ctx.stroke();
+        } else if (this.type === 'ufo') {
+            // Simple UFO
+            ctx.fillStyle = '#a9a9a9';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 20, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Dome
+            ctx.fillStyle = '#00ffff'; // Cyan dome
+            ctx.beginPath();
+            ctx.arc(0, -5, 8, Math.PI, 0);
+            ctx.fill();
+            // Lights
+            ctx.fillStyle = 'yellow';
+            for (let i = -10; i <= 10; i += 10) {
+                ctx.beginPath();
+                ctx.arc(i, 2, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        ctx.restore();
+    }
+}
+
+function initAnimation(seasonConfig) {
+    particles = [];
+    flyingObjects = [];
+
+    // Init Particles
+    if (seasonConfig.particleType !== 'none') {
+        const count = seasonConfig.particleType === 'snow' ? 100 : 30;
+        for (let i = 0; i < count; i++) {
+            particles.push(new Particle(seasonConfig.particleType, seasonConfig.particleColor));
+        }
+    }
+
+    // Init Flying Object (just one for now that respawns)
+    flyingObjects.push(new FlyingObject());
+}
+
+function animate() {
+    // Clear main canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Background first
-    drawBackground();
+    // Draw static scene (background + tree)
+    if (staticSceneCanvas) {
+        ctx.drawImage(staticSceneCanvas, 0, 0);
+    }
 
-    // Start from bottom center
+    // Update and Draw Particles
+    particles.forEach(p => {
+        p.update();
+        p.draw(ctx);
+    });
+
+    // Update and Draw Flying Objects
+    flyingObjects.forEach(obj => {
+        obj.update();
+        obj.draw(ctx);
+    });
+
+    animationId = requestAnimationFrame(animate);
+}
+
+function generateBonsai() {
+    // Stop previous animation
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+    }
+
+    // Pick a random season
+    const seasonKeys = Object.keys(config.seasons);
+    const seasonKey = seasonKeys[Math.floor(Math.random() * seasonKeys.length)];
+    currentSeason = seasonKey;
+    const seasonConfig = config.seasons[seasonKey];
+
+    console.log(`Generating Bonsai for season: ${seasonKey}`);
+
+    // Create an offscreen canvas to hold the static scene
+    staticSceneCanvas = document.createElement('canvas');
+    staticSceneCanvas.width = canvas.width;
+    staticSceneCanvas.height = canvas.height;
+    const staticCtx = staticSceneCanvas.getContext('2d');
+
+    // Draw Background to static canvas
+    drawBackground(staticCtx);
+
+    // Draw Tree to static canvas
     const startX = canvas.width / 2;
     const startY = canvas.height;
-
-    // Initial trunk
     const trunkLength = randomRange(canvas.height * 0.15, canvas.height * 0.25);
     const trunkWidth = randomRange(15, 25);
     const startAngle = -Math.PI / 2 + randomRange(-0.1, 0.1);
 
-    drawBranch(startX, startY, trunkLength, startAngle, trunkWidth, config.maxDepth);
+    drawBranch(staticCtx, startX, startY, trunkLength, startAngle, trunkWidth, config.maxDepth, seasonConfig);
+
+    // Initialize Animation elements
+    initAnimation(seasonConfig);
+
+    // Start Animation Loop
+    animate();
 }
 
 window.generateBonsai = generateBonsai;
