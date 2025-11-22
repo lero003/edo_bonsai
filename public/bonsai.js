@@ -139,43 +139,95 @@ function drawBranch(ctxToDraw, x, y, length, angle, width, depth, seasonConfig) 
     }
 }
 
-function drawInkMountain(ctxToDraw, baseY, color, amplitude) {
-    ctxToDraw.beginPath();
-    ctxToDraw.moveTo(0, baseY);
+function drawBrushStroke(ctx, x1, y1, x2, y2, width, roughness) {
+    const dist = Math.hypot(x2 - x1, y2 - y1);
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const steps = Math.ceil(dist / 2); // Draw every 2 pixels
 
+    ctx.save();
+    for (let i = 0; i < steps; i++) {
+        const t = i / steps;
+        const x = x1 + (x2 - x1) * t;
+        const y = y1 + (y2 - y1) * t;
+
+        // Add roughness
+        const offsetX = randomRange(-roughness, roughness);
+        const offsetY = randomRange(-roughness, roughness);
+
+        // Vary width slightly
+        const currentWidth = width * randomRange(0.5, 1.5) * (1 - Math.abs(0.5 - t)); // Taper ends slightly
+
+        ctx.beginPath();
+        ctx.arc(x + offsetX, y + offsetY, currentWidth / 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawInkMountain(ctxToDraw, baseY, color, amplitude) {
+    // Create a path for the mountain ridge
+    let points = [];
     let x = 0;
+    points.push({ x: 0, y: baseY });
+
     while (x < canvas.width) {
         const nextX = x + randomRange(50, 150);
         const nextY = baseY - randomRange(0, amplitude);
-        const cpX = (x + nextX) / 2;
-        const cpY = baseY - randomRange(amplitude * 0.5, amplitude * 1.5);
-
-        ctxToDraw.quadraticCurveTo(cpX, cpY, nextX, nextY);
+        points.push({ x: nextX, y: nextY });
         x = nextX;
     }
+    points.push({ x: canvas.width, y: baseY });
+    points.push({ x: canvas.width, y: canvas.height });
+    points.push({ x: 0, y: canvas.height });
 
-    ctxToDraw.lineTo(canvas.width, canvas.height);
-    ctxToDraw.lineTo(0, canvas.height);
+    // Fill the main shape first (base layer)
+    ctxToDraw.beginPath();
+    ctxToDraw.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+        // Use simple lines for the fill shape, or curves
+        ctxToDraw.lineTo(points[i].x, points[i].y);
+    }
     ctxToDraw.closePath();
-
     ctxToDraw.fillStyle = color;
     ctxToDraw.fill();
+
+    // Draw the ridge with "brush strokes"
+    ctxToDraw.fillStyle = config.trunkColor; // Use dark ink color for the ridge line
+    const ridgePoints = points.slice(0, points.length - 2); // Exclude bottom corners
+
+    // Draw segments
+    for (let i = 0; i < ridgePoints.length - 1; i++) {
+        const p1 = ridgePoints[i];
+        const p2 = ridgePoints[i + 1];
+
+        // Draw multiple strokes for texture
+        const strokes = 3;
+        for (let j = 0; j < strokes; j++) {
+            ctxToDraw.globalAlpha = randomRange(0.1, 0.3);
+            // Offset slightly for each stroke
+            const offX = randomRange(-5, 5);
+            const offY = randomRange(-5, 5);
+            drawBrushStroke(ctxToDraw, p1.x + offX, p1.y + offY, p2.x + offX, p2.y + offY, randomRange(2, 5), 2);
+        }
+    }
+    ctxToDraw.globalAlpha = 1.0;
 }
 
 function drawInkCloud(ctxToDraw, x, y, size) {
     ctxToDraw.save();
     ctxToDraw.translate(x, y);
 
-    const puffs = Math.floor(randomRange(3, 6));
-    ctxToDraw.fillStyle = 'rgba(200, 200, 200, 0.1)';
+    const puffs = Math.floor(randomRange(5, 10));
+    ctxToDraw.fillStyle = 'rgba(200, 200, 200, 0.05)'; // Very faint
 
     for (let i = 0; i < puffs; i++) {
         const puffSize = size * randomRange(0.5, 1.0);
         const offsetX = randomRange(-size / 2, size / 2);
         const offsetY = randomRange(-size / 4, size / 4);
 
+        // Distorted ellipse for ink wash look
         ctxToDraw.beginPath();
-        ctxToDraw.arc(offsetX, offsetY, puffSize, 0, Math.PI * 2);
+        ctxToDraw.ellipse(offsetX, offsetY, puffSize, puffSize * randomRange(0.5, 0.8), randomRange(0, Math.PI), 0, Math.PI * 2);
         ctxToDraw.fill();
     }
 
@@ -183,9 +235,9 @@ function drawInkCloud(ctxToDraw, x, y, size) {
 }
 
 function drawBackground(ctxToDraw) {
-    // Distant mountains
+    // Distant mountains (lighter, less detail)
     drawInkMountain(ctxToDraw, canvas.height * 0.8, 'rgba(44, 44, 44, 0.05)', 100);
-    // Closer mountains
+    // Closer mountains (slightly darker)
     drawInkMountain(ctxToDraw, canvas.height * 0.9, 'rgba(44, 44, 44, 0.1)', 60);
 
     // Clouds
