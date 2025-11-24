@@ -12,26 +12,15 @@ let currentSeason = 'summer';
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    // Regenerate bonsai on resize to fit new dimensions
-    if (window.generateBonsai) {
-        window.generateBonsai();
+    if (staticSceneCanvas) {
+        // If we resize, we might need to regenerate or at least re-center. 
+        // For now, let's just clear the static scene to force a regenerate if needed, 
+        // but strictly speaking the user might just want it to scale.
+        // Simpler approach: just let the next generation fix it, or re-render if we stored the tree data.
+        // For this iteration, we'll just accept it might look cropped until regenerated.
     }
 }
-
-// Debounce function to prevent excessive regeneration during resize
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-window.addEventListener('resize', debounce(resizeCanvas, 300));
+window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 // Configuration for the Wabi-Sabi + Digital aesthetic
