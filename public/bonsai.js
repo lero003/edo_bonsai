@@ -7,24 +7,17 @@ let staticSceneCanvas = null;
 let particles = [];
 let flyingObjects = [];
 let currentSeason = 'summer';
-let currentTreeData = null; // Store the tree structure
-let time = 0; // Time accumulator for sway
 
 // Set canvas size to full screen
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     if (staticSceneCanvas) {
-        // Re-create static canvas on resize to match new dimensions
-        // We might lose the old background, so ideally we'd regenerate or redraw it.
-        // For now, we'll just let the next generation fix it fully, 
-        // but to avoid errors we can resize the static canvas too.
-        const newStatic = document.createElement('canvas');
-        newStatic.width = canvas.width;
-        newStatic.height = canvas.height;
-        // We lose the content, but that's better than a crash or stretched image.
-        staticSceneCanvas = newStatic;
-        // If we have a tree, we should probably trigger a regenerate or just accept the background is gone until next click.
+        // If we resize, we might need to regenerate or at least re-center. 
+        // For now, let's just clear the static scene to force a regenerate if needed, 
+        // but strictly speaking the user might just want it to scale.
+        // Simpler approach: just let the next generation fix it, or re-render if we stored the tree data.
+        // For this iteration, we'll just accept it might look cropped until regenerated.
     }
 }
 window.addEventListener('resize', resizeCanvas);
@@ -73,172 +66,78 @@ function getRandomElement(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// --- Tree Data Generation ---
+function drawDigitalLeaf(ctxToDraw, x, y, seasonConfig) {
+    ctxToDraw.save();
+    ctxToDraw.translate(x, y);
 
-function generateLeafData(seasonConfig) {
+    // Digital Glitch / Binary Leaf
     const isBinary = Math.random() > 0.5;
     const leafColor = getRandomElement(seasonConfig.leafColors);
-    
+
     if (isBinary) {
-        return {
-            type: 'binary',
-            char: Math.random() > 0.5 ? '0' : '1',
-            color: Math.random() > 0.7 ? seasonConfig.digitalColor : leafColor,
-            size: randomRange(10, 14),
-            offsetX: randomRange(-10, 10),
-            offsetY: randomRange(-10, 10)
-        };
+        // Increased font size for more visibility
+        ctxToDraw.font = `${randomRange(10, 14)}px monospace`;
+        ctxToDraw.fillStyle = Math.random() > 0.7 ? seasonConfig.digitalColor : leafColor;
+        ctxToDraw.fillText(Math.random() > 0.5 ? '0' : '1', 0, 0);
     } else {
-        return {
-            type: 'pixel',
-            color: leafColor,
-            size: randomRange(5, 12),
-            offsetX: randomRange(-10, 10),
-            offsetY: randomRange(-10, 10)
-        };
+        // Pixelated square leaf - Increased size
+        const size = randomRange(5, 12);
+        ctxToDraw.fillStyle = leafColor;
+        ctxToDraw.fillRect(0, 0, size, size);
     }
+
+    ctxToDraw.restore();
 }
 
-function generateBranchData(length, width, depth, seasonConfig) {
-    const node = {
-        length: length,
-        width: width,
-        depth: depth,
-        curveOffsetX: randomRange(-10, 10),
-        curveOffsetY: randomRange(-10, 10),
-        children: [],
-        leaves: []
-    };
-
+function drawBranch(ctxToDraw, x, y, length, angle, width, depth, seasonConfig) {
     if (depth === 0) {
-        // Generate leaves
+        // Draw a DENSE cluster of leaves at the end
         const leafCount = Math.floor(randomRange(5, 10));
         for (let i = 0; i < leafCount; i++) {
-            node.leaves.push(generateLeafData(seasonConfig));
+            const offsetX = randomRange(-25, 25);
+            const offsetY = randomRange(-25, 25);
+            drawDigitalLeaf(ctxToDraw, x + offsetX, y + offsetY, seasonConfig);
         }
-        return node;
+        return;
     }
 
-    // Generate children
+    // Calculate new end point with some organic curvature
+    const cpX = x + Math.cos(angle) * (length / 2) + randomRange(-10, 10);
+    const cpY = y + Math.sin(angle) * (length / 2) + randomRange(-10, 10);
+
+    const endX = x + Math.cos(angle) * length;
+    const endY = y + Math.sin(angle) * length;
+
+    // Draw the branch
+    ctxToDraw.beginPath();
+    ctxToDraw.moveTo(x, y);
+    ctxToDraw.quadraticCurveTo(cpX, cpY, endX, endY);
+
+    ctxToDraw.lineWidth = width;
+    ctxToDraw.strokeStyle = config.trunkColor;
+    ctxToDraw.lineCap = 'round';
+
+    // Ink bleed effect
+    ctxToDraw.globalAlpha = 0.8;
+    ctxToDraw.stroke();
+    ctxToDraw.globalAlpha = 1.0;
+
+    // Recursive calls
     const branchCount = Math.floor(randomRange(2, 4));
+
     for (let i = 0; i < branchCount; i++) {
+        const newAngle = angle + randomRange(-config.branchAngle, config.branchAngle);
         const newLength = length * config.growthFactor * randomRange(0.7, 1.0);
         const newWidth = width * 0.7;
-        
-        // Store relative angle
-        const relativeAngle = randomRange(-config.branchAngle, config.branchAngle);
 
         if (newLength > 5) {
-            const childNode = generateBranchData(newLength, newWidth, depth - 1, seasonConfig);
-            childNode.relativeAngle = relativeAngle;
-            node.children.push(childNode);
+            drawBranch(ctxToDraw, endX, endY, newLength, newAngle, newWidth, depth - 1, seasonConfig);
         } else {
-            // Terminal small branches become leaves too
-            const leaf = generateLeafData(seasonConfig);
-            // We attach these "terminal" leaves to the current node but maybe with an offset?
-            // Or we treat them as a special child. 
-            // Simpler: just add to leaves of this node, effectively making it a leaf cluster.
-            node.leaves.push(leaf);
-            if (Math.random() > 0.5) {
-                node.leaves.push(generateLeafData(seasonConfig));
-            }
-        }
-    }
-    return node;
-}
-
-// --- Tree Rendering ---
-
-function renderLeaf(ctx, x, y, leaf) {
-    ctx.save();
-    ctx.translate(x + leaf.offsetX, y + leaf.offsetY);
-
-    if (leaf.type === 'binary') {
-        ctx.font = `${leaf.size}px monospace`;
-        ctx.fillStyle = leaf.color;
-        ctx.fillText(leaf.char, 0, 0);
-    } else {
-        ctx.fillStyle = leaf.color;
-        ctx.fillRect(0, 0, leaf.size, leaf.size);
-    }
-
-    ctx.restore();
-}
-
-function renderTree(ctx, node, startX, startY, parentAngle, time) {
-    // Calculate Sway
-    // Sway is stronger at the top (lower depth in our recursion, but let's use depth value).
-    // Actually, depth 12 is root, 0 is tip.
-    // So sway should be proportional to (maxDepth - depth).
-    // Also add some phase shift based on depth to make it look like a wave.
-    
-    // Wind force
-    const windSpeed = 0.002;
-    const swayAmount = 0.02; // Base sway angle
-    
-    // Calculate current angle
-    // If this is the root, parentAngle is the base angle.
-    // If this is a child, parentAngle is the angle of the parent branch.
-    // We add the node's relative angle + sway.
-    
-    // We only apply sway if it's not the root (or maybe root sways a tiny bit too?)
-    // Let's apply sway to every branch relative to its parent.
-    
-    const depthFactor = (config.maxDepth - node.depth); // 0 at root, 12 at tip
-    const sway = Math.sin(time * windSpeed + depthFactor * 0.5) * swayAmount * (depthFactor * 0.1);
-    
-    // For the root, we don't have a relativeAngle stored in the node usually, 
-    // but we can pass the base angle as parentAngle and treat relativeAngle as 0 if undefined.
-    const currentAngle = parentAngle + (node.relativeAngle || 0) + sway;
-
-    // Calculate End Point
-    const endX = startX + Math.cos(currentAngle) * node.length;
-    const endY = startY + Math.sin(currentAngle) * node.length;
-
-    // Calculate Control Point for Curve (rotated by currentAngle)
-    // We need to rotate the random offsets we stored to match the branch's new orientation
-    // Or simpler: just add them to the midpoint calculated from the new start/end.
-    // But if we just add fixed x/y offsets, the curve won't rotate with the branch.
-    // Let's rotate the curve offset.
-    const cos = Math.cos(currentAngle);
-    const sin = Math.sin(currentAngle);
-    const rotCurveX = node.curveOffsetX * cos - node.curveOffsetY * sin;
-    const rotCurveY = node.curveOffsetX * sin + node.curveOffsetY * cos;
-
-    const midX = (startX + endX) / 2;
-    const midY = (startY + endY) / 2;
-    const cpX = midX + rotCurveX;
-    const cpY = midY + rotCurveY;
-
-    // Draw Branch
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.quadraticCurveTo(cpX, cpY, endX, endY);
-    ctx.lineWidth = node.width;
-    ctx.strokeStyle = config.trunkColor;
-    ctx.lineCap = 'round';
-    
-    // Ink bleed effect (simplified for performance)
-    ctx.globalAlpha = 0.8;
-    ctx.stroke();
-    ctx.globalAlpha = 1.0;
-
-    // Draw Children
-    if (node.children) {
-        for (const child of node.children) {
-            renderTree(ctx, child, endX, endY, currentAngle, time);
-        }
-    }
-
-    // Draw Leaves
-    if (node.leaves) {
-        for (const leaf of node.leaves) {
-            // Leaves move with the branch end
-            renderLeaf(ctx, endX, endY, leaf);
+            drawDigitalLeaf(ctxToDraw, endX, endY, seasonConfig);
+            if (Math.random() > 0.5) drawDigitalLeaf(ctxToDraw, endX + randomRange(-10, 10), endY + randomRange(-10, 10), seasonConfig);
         }
     }
 }
-
 
 function drawInkMountain(ctxToDraw, baseY, color, amplitude) {
     // Create a path for the mountain ridge
@@ -498,19 +397,9 @@ function animate() {
     // Clear main canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw static scene (background)
+    // Draw static scene (background + tree)
     if (staticSceneCanvas) {
         ctx.drawImage(staticSceneCanvas, 0, 0);
-    }
-
-    // Draw Tree with Sway
-    if (currentTreeData) {
-        time += 16; // Approx 16ms per frame
-        const startX = canvas.width / 2;
-        const startY = canvas.height;
-        const startAngle = currentTreeData.angle; // Root angle
-        
-        renderTree(ctx, currentTreeData, startX, startY, startAngle, time);
     }
 
     // Update and Draw Particles
@@ -542,7 +431,7 @@ function generateBonsai() {
 
     console.log(`Generating Bonsai for season: ${seasonKey}`);
 
-    // Create an offscreen canvas to hold the static scene (Background only now)
+    // Create an offscreen canvas to hold the static scene
     staticSceneCanvas = document.createElement('canvas');
     staticSceneCanvas.width = canvas.width;
     staticSceneCanvas.height = canvas.height;
@@ -551,17 +440,14 @@ function generateBonsai() {
     // Draw Background to static canvas
     drawBackground(staticCtx);
 
-    // Generate Tree Data
+    // Draw Tree to static canvas
+    const startX = canvas.width / 2;
+    const startY = canvas.height;
     const trunkLength = randomRange(canvas.height * 0.15, canvas.height * 0.25);
     const trunkWidth = randomRange(15, 25);
     const startAngle = -Math.PI / 2 + randomRange(-0.1, 0.1);
 
-    currentTreeData = generateBranchData(trunkLength, trunkWidth, config.maxDepth, seasonConfig);
-    // Store root properties that aren't in the recursive structure's relative logic
-    currentTreeData.angle = startAngle; 
-    
-    // Reset time
-    time = 0;
+    drawBranch(staticCtx, startX, startY, trunkLength, startAngle, trunkWidth, config.maxDepth, seasonConfig);
 
     // Initialize Animation elements
     initAnimation(seasonConfig);
