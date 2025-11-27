@@ -515,8 +515,8 @@ function animate() {
     particles.forEach(p => { p.update(); p.draw(ctx); });
     flyingObjects.forEach(obj => { obj.update(); obj.draw(ctx); });
 
-    // 4. Draw Glitch Effects
-    drawGlitch(ctx);
+    // Glitch effects removed for natural aesthetic
+    // drawGlitch(ctx);
 
     animationId = requestAnimationFrame(animate);
 }
