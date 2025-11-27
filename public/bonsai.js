@@ -236,42 +236,55 @@ function renderTree(ctx, node, startX, startY, parentAngle, progress) {
 // --- Glitch Effects ---
 
 function drawGlitch(ctx) {
-    if (Math.random() > 0.05) return; // Only glitch occasionally
+    // Reduced frequency: only 2% chance per frame
+    if (Math.random() > 0.02) return;
 
     const width = canvas.width;
     const height = canvas.height;
 
     ctx.save();
 
-    // 1. RGB Shift (Simulated with simple offset drawing)
+    // 1. RGB Shift (Chromatic Aberration) - Subtle and artistic
+    // Only apply to a horizontal slice to look like a scanning error
     if (Math.random() > 0.5) {
+        const sliceY = randomRange(0, height);
+        const sliceHeight = randomRange(2, 20);
         const offset = randomRange(2, 5);
-        ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-        ctx.fillRect(randomRange(0, width), randomRange(0, height), randomRange(10, 100), 2);
-        ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
-        ctx.fillRect(randomRange(0, width), randomRange(0, height), randomRange(10, 100), 2);
+
+        // Get the image data for the slice
+        try {
+            // Note: getImageData can be slow, so we simulate the look with composite operations instead for performance
+
+            // Red Channel Shift
+            ctx.globalCompositeOperation = 'screen';
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+            ctx.fillRect(0, sliceY, width, sliceHeight);
+
+            // Cyan Channel Shift (complementary)
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+            ctx.fillRect(offset, sliceY, width, sliceHeight);
+
+        } catch (e) {
+            // Fallback if security/performance issues
+        }
     }
 
-    // 2. Block Noise
-    if (Math.random() > 0.3) {
+    // 2. Scanlines - "Data Processing" look
+    if (Math.random() > 0.6) {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.1)'; // Matrix green tint
+        const scanlineY = randomRange(0, height);
+        ctx.fillRect(0, scanlineY, width, 2);
+    }
+
+    // 3. Digital Artifacts (Numbers/Code) - "Matrix" feel
+    if (Math.random() > 0.8) {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = config.seasons[currentSeason].digitalColor;
+        ctx.font = '12px monospace';
         const x = randomRange(0, width);
         const y = randomRange(0, height);
-        const w = randomRange(20, 100);
-        const h = randomRange(5, 30);
-
-        ctx.globalCompositeOperation = 'difference';
-        ctx.fillStyle = 'white';
-        ctx.fillRect(x, y, w, h);
-    }
-
-    // 3. Scanlines
-    if (Math.random() > 0.7) {
-        ctx.globalCompositeOperation = 'overlay';
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-        for (let i = 0; i < height; i += 4) {
-            ctx.fillRect(0, i, width, 1);
-        }
+        ctx.fillText(Math.random() > 0.5 ? '0x' + Math.floor(Math.random() * 255).toString(16) : 'ERR', x, y);
     }
 
     ctx.restore();
