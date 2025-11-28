@@ -19,6 +19,19 @@ const GROWTH_SPEED = 0.005;
 let glitchIntensity = 0;
 let glitchTimer = 0;
 
+// Wind State
+let windTime = 0;
+const WIND_SPEED = 0.02;
+
+// Interaction State
+let mouseX = -1000;
+let mouseY = -1000;
+
+window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
 // Set canvas size to full screen
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -235,9 +248,12 @@ function renderTree(ctx, node, startX, startY, parentAngle, progress) {
 
 // --- Glitch Effects ---
 
+// --- Glitch Effects (Refined for Wabi-Sabi) ---
+
 function drawGlitch(ctx) {
-    // Reduced frequency: only 2% chance per frame
-    if (Math.random() > 0.02) return;
+    // Reduced frequency: only 1% chance per frame normally, higher during growth
+    const chance = isGrowing ? 0.05 : 0.01;
+    if (Math.random() > chance) return;
 
     const width = canvas.width;
     const height = canvas.height;
@@ -245,46 +261,84 @@ function drawGlitch(ctx) {
     ctx.save();
 
     // 1. RGB Shift (Chromatic Aberration) - Subtle and artistic
-    // Only apply to a horizontal slice to look like a scanning error
     if (Math.random() > 0.5) {
         const sliceY = randomRange(0, height);
-        const sliceHeight = randomRange(2, 20);
-        const offset = randomRange(2, 5);
+        const sliceHeight = randomRange(2, 10); // Thinner slices
+        const offset = randomRange(1, 3); // Smaller offset
 
-        // Get the image data for the slice
         try {
-            // Note: getImageData can be slow, so we simulate the look with composite operations instead for performance
-
             // Red Channel Shift
             ctx.globalCompositeOperation = 'screen';
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.2)'; // Lower opacity
             ctx.fillRect(0, sliceY, width, sliceHeight);
 
-            // Cyan Channel Shift (complementary)
-            ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+            // Cyan Channel Shift
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
             ctx.fillRect(offset, sliceY, width, sliceHeight);
 
-        } catch (e) {
-            // Fallback if security/performance issues
-        }
+        } catch (e) { }
     }
 
     // 2. Scanlines - "Data Processing" look
-    if (Math.random() > 0.6) {
+    if (Math.random() > 0.7) {
         ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = 'rgba(0, 255, 0, 0.1)'; // Matrix green tint
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.05)'; // Very faint
         const scanlineY = randomRange(0, height);
-        ctx.fillRect(0, scanlineY, width, 2);
+        ctx.fillRect(0, scanlineY, width, 1);
     }
 
-    // 3. Digital Artifacts (Numbers/Code) - "Matrix" feel
+    // 3. Digital Artifacts - "Digital Decay"
     if (Math.random() > 0.8) {
         ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = config.seasons[currentSeason].digitalColor;
-        ctx.font = '12px monospace';
+        ctx.font = '10px monospace';
         const x = randomRange(0, width);
         const y = randomRange(0, height);
-        ctx.fillText(Math.random() > 0.5 ? '0x' + Math.floor(Math.random() * 255).toString(16) : 'ERR', x, y);
+        // Occasionally draw a "dead pixel" block
+        if (Math.random() > 0.5) {
+            ctx.fillRect(x, y, 3, 3);
+        } else {
+            ctx.fillText(Math.random() > 0.5 ? '1' : '0', x, y);
+        }
+    }
+
+    ctx.restore();
+}
+
+// --- Hanko (Seal) Animation ---
+function drawHanko(ctx) {
+    if (isGrowing) return; // Only draw when fully grown
+
+    const size = 60;
+    const x = canvas.width - 100;
+    const y = canvas.height - 100;
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Slight rotation for natural feel
+    ctx.rotate(-0.1);
+
+    // Border
+    ctx.strokeStyle = '#d93a3a'; // Vermilion
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.rect(-size / 2, -size / 2, size, size);
+    ctx.stroke();
+
+    // Inner Text (Pseudo-Kanji / Digital Mix)
+    ctx.fillStyle = '#d93a3a';
+    ctx.font = '24px "Noto Serif JP", serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('江戸', 0, -10);
+    ctx.fillText('AI', 0, 15);
+
+    // "Grunge" texture for the seal (Wabi-Sabi)
+    for (let i = 0; i < 50; i++) {
+        const gx = randomRange(-size / 2, size / 2);
+        const gy = randomRange(-size / 2, size / 2);
+        ctx.clearRect(gx, gy, 2, 2);
     }
 
     ctx.restore();
@@ -377,6 +431,17 @@ class Particle {
         this.y += this.speedY;
         this.x += this.speedX + Math.sin(this.y * 0.01) * 0.5;
         this.rotation += this.rotationSpeed;
+
+        // Mouse Interaction
+        const dx = this.x - mouseX;
+        const dy = this.y - mouseY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 100) {
+            const force = (100 - dist) / 100;
+            this.x += (dx / dist) * force * 5;
+            this.y += (dy / dist) * force * 5;
+        }
+
         if (this.y > canvas.height) {
             this.y = -10;
             this.x = Math.random() * canvas.width;
@@ -501,9 +566,25 @@ function animate() {
             // Render growing tree directly to main canvas
             renderTree(ctx, currentTreeData, canvas.width / 2, canvas.height, currentTreeData.angle, growthProgress);
         } else {
-            // Draw cached tree
+            // Draw cached tree with Wind Simulation
             if (treeCanvas) {
+                windTime += WIND_SPEED;
+                // Simple wind effect: Skew the canvas slightly based on sine wave
+                // We want the bottom to be fixed and top to sway.
+                // Since we can't easily skew just the top in 2D canvas without complex transforms,
+                // we'll rotate around the base slightly.
+
+                const sway = Math.sin(windTime) * 0.015; // Subtle sway
+
+                ctx.save();
+                ctx.translate(canvas.width / 2, canvas.height); // Pivot at base
+                ctx.rotate(sway);
+                ctx.translate(-canvas.width / 2, -canvas.height);
                 ctx.drawImage(treeCanvas, 0, 0);
+                ctx.restore();
+
+                // Draw Hanko (Seal)
+                drawHanko(ctx);
             } else {
                 // Fallback if cache missing
                 renderTree(ctx, currentTreeData, canvas.width / 2, canvas.height, currentTreeData.angle, 1.0);
@@ -515,8 +596,8 @@ function animate() {
     particles.forEach(p => { p.update(); p.draw(ctx); });
     flyingObjects.forEach(obj => { obj.update(); obj.draw(ctx); });
 
-    // Glitch effects removed for natural aesthetic
-    // drawGlitch(ctx);
+    // Glitch effects (Refined)
+    drawGlitch(ctx);
 
     animationId = requestAnimationFrame(animate);
 }
