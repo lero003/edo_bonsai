@@ -312,7 +312,7 @@ function drawHanko(ctx) {
     if (isGrowing) return; // Only draw when fully grown
 
     const size = 60;
-    const x = canvas.width - 100;
+    const x = 100; // Left side to avoid button overlap
     const y = canvas.height - 100;
 
     ctx.save();
