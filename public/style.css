@@ -268,46 +268,7 @@ h1::before {
     width: fit-content;
 }
 
-/* Gallery Section Specifics */
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 30px;
-    margin-top: 50px;
-}
 
-.gallery-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-}
-
-.placeholder-bonsai {
-    width: 100%;
-    aspect-ratio: 1;
-    background-color: #f0f0f0;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
-}
-
-.placeholder-bonsai::before {
-    content: "Coming Soon";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #999;
-    font-size: 0.8rem;
-    letter-spacing: 0.1em;
-}
-
-.caption {
-    font-size: 0.8rem;
-    font-style: italic;
-    color: var(--accent-color);
-}
 
 /* Footer */
 footer {

@@ -250,6 +250,7 @@ function renderTree(ctx, node, startX, startY, parentAngle, progress) {
 
 // --- Glitch Effects (Refined for Wabi-Sabi) ---
 
+/*
 function drawGlitch(ctx) {
     // Reduced frequency: only 1% chance per frame normally, higher during growth
     const chance = isGrowing ? 0.05 : 0.01;
@@ -304,6 +305,7 @@ function drawGlitch(ctx) {
 
     ctx.restore();
 }
+*/
 
 // --- Hanko (Seal) Animation ---
 function drawHanko(ctx) {
@@ -596,8 +598,8 @@ function animate() {
     particles.forEach(p => { p.update(); p.draw(ctx); });
     flyingObjects.forEach(obj => { obj.update(); obj.draw(ctx); });
 
-    // Glitch effects (Refined)
-    drawGlitch(ctx);
+    // Glitch effects removed per user feedback for a cleaner, luxury aesthetic
+    // drawGlitch(ctx);
 
     animationId = requestAnimationFrame(animate);
 }
