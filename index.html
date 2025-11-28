@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edo-AI Bonsai</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="canvas-wrapper">
+        <canvas id="bonsaiCanvas"></canvas>
+    </div>
+
+    <div class="ui-layer">
+        <header>
+            <h1>EDO BONSAI</h1>
+            <p class="subtitle">Digital Nature, Growing in the Cloud.</p>
+        </header>
+
+        <div id="haikuContainer" class="haiku-container">
+            <p id="haikuText" class="haiku-text"></p>
+        </div>
+
+        <div class="scroll-indicator">
+            <span>SCROLL</span>
+            <div class="line"></div>
+        </div>
+    </div>
+
+    <div class="content-layer">
+        <section class="section philosophy">
+            <div class="section-content">
+                <h2>Philosophy</h2>
+                <h3>デジタルな枯淡</h3>
+                <p>
+                    江戸の美意識「わび・さび」は、不完全なもの、移ろいゆくものに美を見出す心です。<br>
+                    Edo-AI Bonsaiは、その精神をデジタルの世界で再解釈しました。
+                </p>
+                <p>
+                    クラウド上の演算によって生まれる盆栽は、二度と同じ姿にはなりません。<br>
+                    それはまるで、自然界の木々が風雪に耐え、独自の枝ぶりを形成するように、<br>
+                    乱数という名の「デジタルの風」によって育てられます。
+                </p>
+                <p>
+                    永遠に保存可能なデータではなく、<br>
+                    一期一会の生成結果にこそ、現代の「あはれ」があるのです。
+                </p>
+            </div>
+        </section>
+
+        <section class="section algorithm">
+            <div class="section-content">
+                <h2>The Algorithm</h2>
+                <h3>数式による成長</h3>
+                <p>
+                    この盆栽は、再帰的なフラクタルアルゴリズムによって描かれています。<br>
+                    幹から枝へ、枝から葉へ。<br>
+                    単純なルールの繰り返しが、複雑で有機的な造形を生み出します。
+                </p>
+                <div class="code-snippet">
+                    <code>
+                        function grow(branch) {<br>
+                        &nbsp;&nbsp;if (energy < 0) return;<br>
+                        &nbsp;&nbsp;split(branch);<br>
+                        &nbsp;&nbsp;grow(left);<br>
+                        &nbsp;&nbsp;grow(right);<br>
+                        }
+                    </code>
+                </div>
+                <p>
+                    葉の一枚一枚は、0と1のビット、あるいはピクセルの集合体。<br>
+                    遠目には自然な緑に見えても、近づけばそこには<br>
+                    デジタルな構成要素（グリッチ）が隠されています。
+                </p>
+            </div>
+        </section>
+
+        <section class="section concept">
+            <div class="section-content">
+                <h2>Edo-Tech Fusion</h2>
+                <h3>伝統と革新の融合</h3>
+                <p>
+                    江戸の職人たちが筆に込めた魂を、現代のコードで表現する試み。<br>
+                    墨の濃淡はアルファチャンネルへ、筆の勢いはベクター計算へ。<br>
+                    形を変えても、そこに宿る「粋」は変わりません。<br>
+                    テクノロジーは、新しい時代の筆なのです。
+                </p>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-content">
+                <p class="copyright">&copy; 2025 Edo-AI Bonsai Project</p>
+                <p class="credits">Created with Cloudflare & AI</p>
+            </div>
+        </footer>
+    </div>
+
+    <div class="controls">
+        <button id="regenerateBtn">New Tree</button>
+    </div>
+
+    <script src="bonsai.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
